@@ -315,6 +315,22 @@ class FlowSpec(metaclass=FlowSpecMeta):
 
                 cli.main(self)
 
+    def __setattr__(self, name, value):
+        # 1. Ignore internal Metaflow attributes (which start with '_')
+        if not name.startswith('_'):
+            # 2. Check if the user is trying to overwrite a class attribute
+            if hasattr(self.__class__, name) and not isinstance(getattr(self.__class__, name), property):
+                import warnings
+                warnings.warn(
+                    f"Artifact name conflict: '{name}' is already defined as a class attribute "
+                    f"in {self.__class__.__name__}. This will shadow the class attribute and might "
+                    f"cause unexpected behavior.",
+                    UserWarning,
+                    stacklevel=2
+                )
+        # 3. Proceed with the normal variable assignment
+        super(FlowSpec, self).__setattr__(name, value)
+
     @property
     def script_name(self) -> str:
         """
